@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sahayak AI — Smart Waste Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <!-- TensorFlow.js and MobileNet for Offline Edge AI -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+  <!-- Marked Markdown Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Three.js for 3D Interactive Background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="bg-3d"></canvas>
+  <header>
+    <div class="header-brand">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#logo-grad)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#10b981" />
+              <stop offset="100%" stop-color="#047857" />
+            </linearGradient>
+          </defs>
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </div>
+      <div class="brand-title-group">
+        <h1 id="brandTitle">Sahayak<span class="brand-router">AI</span></h1>
+        <span id="brandTagline" class="brand-tagline">Don't just throw waste away. Recycle, reuse, and recover value.</span>
+      </div>
+    </div>
+    
+    <div class="header-actions notranslate">
+      <div class="custom-lang-container">
+        <select class="custom-lang-select" id="customLangSelect" onchange="changeLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी (Hindi)</option>
+          <option value="gu">ગુજરાતી (Gujarati)</option>
+          <option value="mr">मરાठी (Marathi)</option>
+          <option value="ta">தமிழ் (Tamil)</option>
+          <option value="te">తెలుగు (Telugu)</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="chat-only-mode mobile-tab-chat">
+    <!-- Mobile Navigation Tab Bar -->
+    <div class="mobile-tabs notranslate">
+      <button class="mobile-tab-btn active" id="tabBtnChat" onclick="switchMobileTab('chat')">💬 Chat</button>
+      <button class="mobile-tab-btn" id="tabBtnMap" onclick="switchMobileTab('map')">📍 Recyclers Map</button>
+    </div>
+
+    <!-- Left Column: Unified Chatbot & Welcome Scanner -->
+    <div class="panel left-panel">
+      <section class="home-hero" aria-label="Welcome section">
+        <div class="home-hero-copy">
+          <p class="home-eyebrow">Recycle. Reuse. Recover.</p>
+          <h2>Upload your image and we tell you what to do next.</h2>
+          <p class="home-subcopy">Start with a photo. Then continue like a normal chatbot for category, value, and recycler guidance.</p>
+        </div>
+      </section>
+
+      <section class="upload-launcher" aria-label="Upload waste photo">
+        <div class="chat-input-area">
+          <div class="claude-input-card">
+            <div id="dropzone">
+              <span class="icon">📸</span>
+              <p>Tap to upload a photo</p>
+              <span style="font-size: 10.5px; color: var(--grey); font-weight: normal; margin-top: -4px;">No text needed</span>
+            </div>
+            <!-- Simple text input for users who want to ask without uploading -->
+            <textarea id="chatInput" placeholder="Or type what waste you have..." rows="2" onkeydown="handleInputKeydown(event)"></textarea>
+            <div id="analyzing" style="display: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--moss-dark); font-weight: 600; margin-top: 10px;">> loading local Edge AI...</div>
+            
+            <!-- Bottom Part: Action Footer -->
+            <div class="input-card-footer">
+              <div class="footer-left">
+                <!-- Attachment / Camera upload button -->
+                <button class="footer-btn attachment-btn" onclick="triggerChatUpload()" title="Upload Waste Photo">
+                  📷
+                </button>
+              </div>
+              <div class="footer-right">
+                <!-- Category Dropdown Selector -->
+                <div class="category-dropdown-container">
+                  <select id="chatCategorySelect" onchange="handleCategorySelectChange(this.value)">
+                    <option value="none">Choose Category ▾</option>
+                    <option value="e-waste">💻 E-Waste</option>
+                    <option value="glass">🍾 Glass</option>
+                    <option value="metal">🔩 Metal</option>
+                    <option value="paper-cardboard">📦 Paper & Cardboard</option>
+                    <option value="plastic">🥤 Plastic</option>
+                    <option value="organic-food">🍎 Food Waste</option>
+                    <option value="agricultural">🌾 Agro Stubble</option>
+                    <option value="furniture">🪑 Wood & Furniture</option>
+                    <option value="trash">🗑️ General Trash</option>
+                  </select>
+                </div>
+                
+                <!-- Speech to Text Mic button -->
+                <button class="footer-btn mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="Voice Input (Speech-to-Text)">
+                  🎙️
+                </button>
+                
+                <!-- Send Button -->
+                <button class="footer-send-btn" id="sendBtn" onclick="sendChatMessage()" title="Send Message">
+                  ➔
+                </button>
+              </div>
+
+            </div>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileChange(this)" />
+        </div>
+      </section>
+
+      <section class="home-steps" aria-label="How it works">
+        <div class="home-step-card">
+          <span>1</span>
+          <strong>Upload or describe the waste</strong>
+          <p>Use the camera button or just type a message. Any age user can start without instructions.</p>
+        </div>
+        <div class="home-step-card">
+          <span>2</span>
+          <strong>We detect the category</strong>
+          <p>The app identifies plastic, metal, paper, glass, e-waste, trash, and more.</p>
+        </div>
+        <div class="home-step-card">
+          <span>3</span>
+          <strong>We tell you the next move</strong>
+          <p>Recycle, reuse, sell, repair, or send it to a recycler with clear local guidance.</p>
+        </div>
+      </section>
+
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+        </div>
+      </div>
+
+      <!-- Zigzag category showcase: alternating video/text rows, shown only on first-visit homepage -->
+      <section class="category-showcase-zigzag" id="categoryShowcaseGrid" aria-label="Waste category guides"></section>
+    </div>
+
+    <!-- Right Column: Interactive Map & Recycler Proximity directory -->
+    <div class="panel right-panel">
+      <!-- Google Map Frame -->
+      <div class="map-shell">
+        <iframe id="mapFrame" title="Google Map" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" src="https://www.google.com/maps?q=Ahmedabad%2C%20Gujarat&output=embed"></iframe>
+      </div>
+
+      <!-- Proximity Sorter button -->
+      <button class="geo-btn notranslate" id="geoBtn" onclick="requestUserLocation()">📍 Sort by Nearest to Me</button>
+
+      <div id="locationList">
+        <h2 id="listTitle" style="font-family: 'Oswald', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Verified intake centers / recyclers</h2>
+        <div id="cards"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Floating help button - opens a modal with a YouTube walkthrough video -->
+  <button class="help-fab notranslate" id="helpFabBtn" onclick="openHelpModal()" title="How to use this app">
+    <span class="help-fab-icon">?</span>
+  </button>
+
+  <div class="help-modal-overlay" id="helpModalOverlay" onclick="closeHelpModalOnOverlay(event)">
+    <div class="help-modal">
+      <button class="help-modal-close" onclick="closeHelpModal()" title="Close">✕</button>
+      <h3>How to use this platform</h3>
+      <div class="help-modal-video-wrap">
+        <iframe id="helpModalIframe"
+          src=""
+          title="How to use this platform"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="google_translate_element"></div>
+  <script src="app.js"></script>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

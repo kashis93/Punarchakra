@@ -1,0 +1,70 @@
+{
+  "categories": [
+    {
+      "name": "e-waste",
+      "imageCount": 626,
+      "sampleImages": [
+        "Battery_train_battery_0.jpg",
+        "Battery_train_battery_1.jpg",
+        "Battery_train_battery_10.jpg",
+        "Battery_train_battery_100.jpg",
+        "Battery_train_battery_101.jpg"
+      ]
+    },
+    {
+      "name": "glass",
+      "imageCount": 501,
+      "sampleImages": [
+        "glass1.jpg",
+        "glass10.jpg",
+        "glass100.jpg",
+        "glass101.jpg",
+        "glass102.jpg"
+      ]
+    },
+    {
+      "name": "metal",
+      "imageCount": 410,
+      "sampleImages": [
+        "metal1.jpg",
+        "metal10.jpg",
+        "metal100.jpg",
+        "metal101.jpg",
+        "metal102.jpg"
+      ]
+    },
+    {
+      "name": "paper-cardboard",
+      "imageCount": 997,
+      "sampleImages": [
+        "cardboard_cardboard1.jpg",
+        "cardboard_cardboard10.jpg",
+        "cardboard_cardboard100.jpg",
+        "cardboard_cardboard101.jpg",
+        "cardboard_cardboard102.jpg"
+      ]
+    },
+    {
+      "name": "plastic",
+      "imageCount": 482,
+      "sampleImages": [
+        "plastic1.jpg",
+        "plastic10.jpg",
+        "plastic100.jpg",
+        "plastic101.jpg",
+        "plastic102.jpg"
+      ]
+    },
+    {
+      "name": "trash",
+      "imageCount": 137,
+      "sampleImages": [
+        "trash1.jpg",
+        "trash10.jpg",
+        "trash100.jpg",
+        "trash101.jpg",
+        "trash102.jpg"
+      ]
+    }
+  ]
+}
